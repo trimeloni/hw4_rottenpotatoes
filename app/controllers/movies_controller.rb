@@ -7,6 +7,11 @@ class MoviesController < ApplicationController
   end
 
   def index
+
+    # get teh director value if it is there, need to save it for possible  redirect
+    director = params[:director] || {}
+    movie_title = params[:movie_title] || {}
+
     sort = params[:sort] || session[:sort]
     case sort
     when 'title'
@@ -24,16 +29,27 @@ class MoviesController < ApplicationController
     if params[:sort] != session[:sort]
       session[:sort] = sort
       flash.keep
-      redirect_to :sort => sort, :ratings => @selected_ratings and return
+      redirect_to :sort => sort, :ratings => @selected_ratings, :director => director, :movie_title => movie_title and return
     end
 
     if params[:ratings] != session[:ratings] and @selected_ratings != {}
       session[:sort] = sort
       session[:ratings] = @selected_ratings
       flash.keep
-      redirect_to :sort => sort, :ratings => @selected_ratings and return
+      redirect_to :sort => sort, :ratings => @selected_ratings, :director => director, :movie_title => movie_title and return
     end
-    @movies = Movie.find_all_by_rating(@selected_ratings.keys, ordering)
+
+    if director != nil
+      if director.length < 1
+        flash[:notice] = "'#{movie_title}' has no director info"
+        @movies = Movie.all
+      else
+        #@movies = Movie.find_all_by_directorand_by_rating(director,@selected_ratings.keys, ordering)
+        @movies = Movie.find_all_by_director(director)
+      end
+    else
+      @movies = Movie.find_all_by_rating(@selected_ratings.keys, ordering)
+    end
   end
 
   def new
